@@ -7,5 +7,10 @@
       <description>The amount to change volume when scrolling (between 0.01 and 0.2)</description>
       <range min="0.01" max="0.2"/>
     </key>
+    <key name="inverse-scrolling" type="b">
+      <default>false</default>
+      <summary>Inverse scroll direction</summary>
+      <description>When enabled, scroll up decreases volume and scroll down increases volume</description>
+    </key>
   </schema>
 </schemalist>
