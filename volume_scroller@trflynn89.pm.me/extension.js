@@ -2,6 +2,7 @@ import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as Volume from 'resource:///org/gnome/shell/ui/status/volume.js';
+import {ExtensionType} from 'resource:///org/gnome/shell/misc/extensionUtils.js';
 
 const VolumeScrollerIcons = [
     'audio-volume-muted-symbolic',
@@ -19,10 +20,27 @@ export default class VolumeScroller {
        this.sink = null;
 
        this.volume_max = this.controller.get_vol_max_norm();
-       this.volume_step = 0.05 * this.volume_max;
-
+       
+       this.settings = this._get_settings();
+       this.volume_step = this.settings.get_double('volume-step') * this.volume_max;
+       
        this.scroll_binding = null;
        this.sink_binding = null;
+       this.settings_binding = null;
+    }
+
+    _get_settings() {
+        let dir = import.meta.url.substr(7); // Remove 'file://' prefix
+        dir = dir.substr(0, dir.lastIndexOf('/'));
+        
+        let source = Gio.SettingsSchemaSource.new_from_directory(
+            dir + '/schemas',
+            Gio.SettingsSchemaSource.get_default(),
+            false
+        );
+
+        let schema = source.lookup('org.gnome.shell.extensions.volume-scroller', true);
+        return new Gio.Settings({ settings_schema: schema });
     }
 
     enable() {
@@ -40,6 +58,10 @@ export default class VolumeScroller {
         this.sink_binding = this.controller.connect(
             'default-sink-changed',
             (controller, id) => this._handle_sink_change(controller, id));
+            
+        this.settings_binding = this.settings.connect(
+            'changed::volume-step',
+            () => this._handle_settings_change());
     }
 
     disable() {
@@ -52,7 +74,14 @@ export default class VolumeScroller {
 
             this.controller.disconnect(this.sink_binding);
             this.sink_binding = null;
+
+            this.settings.disconnect(this.settings_binding);
+            this.settings_binding = null;
         }
+    }
+
+    _handle_settings_change() {
+        this.volume_step = this.settings.get_double('volume-step') * this.volume_max;
     }
 
     _handle_scroll(actor, event) {

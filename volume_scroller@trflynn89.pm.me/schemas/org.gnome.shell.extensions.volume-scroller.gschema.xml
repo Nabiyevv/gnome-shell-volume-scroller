@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.volume-scroller" path="/org/gnome/shell/extensions/volume-scroller/">
+    <key name="volume-step" type="d">
+      <default>0.05</default>
+      <summary>Volume change step</summary>
+      <description>The amount to change volume when scrolling (between 0.01 and 0.2)</description>
+      <range min="0.01" max="0.2"/>
+    </key>
+  </schema>
+</schemalist>
