@@ -30,9 +30,9 @@ export default class VolumeScroller {
     }
 
     _get_settings() {
-        let dir = import.meta.url.substr(7); // Remove 'file://' prefix
-        dir = dir.substr(0, dir.lastIndexOf('/'));
-        
+        let dir = import.meta.url.slice(7); // Remove 'file://' prefix
+        dir = dir.slice(0, dir.lastIndexOf('/'));
+
         let source = Gio.SettingsSchemaSource.new_from_directory(
             dir + '/schemas',
             Gio.SettingsSchemaSource.get_default(),
