@@ -23,10 +23,12 @@ export default class VolumeScroller {
        
        this.settings = this._get_settings();
        this.volume_step = this.settings.get_double('volume-step') * this.volume_max;
+       this.inverse_scrolling = this.settings.get_boolean('inverse-scrolling');
        
        this.scroll_binding = null;
        this.sink_binding = null;
        this.settings_binding = null;
+       this.direction_binding = null;
     }
 
     _get_settings() {
@@ -62,6 +64,10 @@ export default class VolumeScroller {
         this.settings_binding = this.settings.connect(
             'changed::volume-step',
             () => this._handle_settings_change());
+
+        this.direction_binding = this.settings.connect(
+            'changed::inverse-scrolling',
+            () => this._handle_direction_change());
     }
 
     disable() {
@@ -77,6 +83,11 @@ export default class VolumeScroller {
 
             this.settings.disconnect(this.settings_binding);
             this.settings_binding = null;
+
+            if (this.direction_binding !== null) {
+                this.settings.disconnect(this.direction_binding);
+                this.direction_binding = null;
+            }
         }
     }
 
@@ -84,20 +95,40 @@ export default class VolumeScroller {
         this.volume_step = this.settings.get_double('volume-step') * this.volume_max;
     }
 
+    _handle_direction_change() {
+        this.inverse_scrolling = this.settings.get_boolean('inverse-scrolling');
+    }
+
     _handle_scroll(actor, event) {
         let volume = this.sink.volume;
+        let direction = event.get_scroll_direction();
 
-        switch (event.get_scroll_direction()) {
-            case Clutter.ScrollDirection.UP:
-                volume += this.volume_step;
-                break;
+        if (this.inverse_scrolling) {
+            switch (direction) {
+                case Clutter.ScrollDirection.UP:
+                    volume -= this.volume_step;
+                    break;
 
-            case Clutter.ScrollDirection.DOWN:
-                volume -= this.volume_step;
-                break;
+                case Clutter.ScrollDirection.DOWN:
+                    volume += this.volume_step;
+                    break;
 
-            default:
-                return Clutter.EVENT_PROPAGATE;
+                default:
+                    return Clutter.EVENT_PROPAGATE;
+            }
+        } else {
+            switch (direction) {
+                case Clutter.ScrollDirection.UP:
+                    volume += this.volume_step;
+                    break;
+
+                case Clutter.ScrollDirection.DOWN:
+                    volume -= this.volume_step;
+                    break;
+
+                default:
+                    return Clutter.EVENT_PROPAGATE;
+            }
         }
 
         volume = Math.min(volume, this.volume_max);

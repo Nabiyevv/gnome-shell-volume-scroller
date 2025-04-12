@@ -1,5 +1,6 @@
 import Adw from 'gi://Adw';
 import Gtk from 'gi://Gtk';
+import Gio from 'gi://Gio';
 import { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
 export default class VolumeScrollerPreferences extends ExtensionPreferences {
@@ -12,7 +13,7 @@ export default class VolumeScrollerPreferences extends ExtensionPreferences {
         page.add(group);
 
         // Create a row for volume step
-        const row = new Adw.ActionRow({
+        const volumeRow = new Adw.ActionRow({
             title: 'Volume Change Step',
             subtitle: 'The amount to change volume when scrolling (1-20%)',
         });
@@ -40,11 +41,34 @@ export default class VolumeScrollerPreferences extends ExtensionPreferences {
         });
 
         // Add scale to the row
-        row.add_suffix(scale);
-        row.set_activatable(false);
+        volumeRow.add_suffix(scale);
+        volumeRow.set_activatable(false);
+        group.add(volumeRow);
 
-        // Add row to the group
-        group.add(row);
+        // Create a row for scroll direction toggle
+        const directionRow = new Adw.ActionRow({
+            title: 'Inverse Scroll Direction',
+            subtitle: 'When enabled, scroll up decreases volume and scroll down increases volume',
+        });
+
+        const toggle = new Gtk.Switch({
+            active: settings.get_boolean('inverse-scrolling'),
+            valign: Gtk.Align.CENTER,
+        });
+
+        // Bind the toggle to the settings
+        settings.bind(
+            'inverse-scrolling',
+            toggle,
+            'active',
+            Gio.SettingsBindFlags.DEFAULT
+        );
+
+        // Add toggle to the row
+        directionRow.add_suffix(toggle);
+        directionRow.set_activatable(true);
+        directionRow.set_activatable_widget(toggle);
+        group.add(directionRow);
 
         // Add the page to the window
         window.add(page);
