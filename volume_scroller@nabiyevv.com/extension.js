@@ -18,7 +18,7 @@ export default class VolumeScroller {
 
        this.enabled = false;
        this.sink = null;
-       this.old_volume = 0;
+       
        this.volume_max = this.controller.get_vol_max_norm();
        
        this.settings = this._get_settings();
@@ -156,34 +156,22 @@ export default class VolumeScroller {
     _handle_middle_click(actor, event) {
         const button = event.get_button();
         if (button === Clutter.BUTTON_MIDDLE) {
-          log(`Clicked button: ${button}`);
-          log(`Default source is muted: line 160 ${this.sink.is_muted}`);
-          if(parseInt(this.sink.volume) != 0){
-            this.old_volume = this.sink.get_volume();
-            log(`Old volume: ${this.old_volume}`);
+            let isMuted = this.sink.get_is_muted();
+            isMuted = !isMuted;
             
-            this.sink.set_volume(0);
-            this.sink.push_volume();
-    
-            this._show_volume(0);
+            this.sink.change_is_muted(isMuted);
             
-            log(`line 170: ${this.sink.get_is_muted()}`);
-          }
-          else {
-            this.sink.set_volume(this.old_volume);
-            this.sink.push_volume();
-            log(`second else line 175: ${this.sink.get_is_muted()}`);
-            this._show_volume(this.old_volume);
-          }
-          
-          // this.sink.change_is_muted(!this.sink.is_muted);
+            if (isMuted)
+                this._show_volume(0);
+            else 
+                this._show_volume(this.sink.volume);
+            
             return Clutter.EVENT_STOP;
-        }
+        } 
         return Clutter.EVENT_PROPAGATE;
     }
 
     _show_volume(volume) {
-        log(`Volume: ${volume}`);
         const percentage = volume / this.volume_max;
         let n;
 
