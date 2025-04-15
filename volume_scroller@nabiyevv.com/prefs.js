@@ -69,6 +69,32 @@ export default class VolumeScrollerPreferences extends ExtensionPreferences {
         directionRow.set_activatable(true);
         directionRow.set_activatable_widget(toggle);
         group.add(directionRow);
+        
+        
+        // Create a row for horizontal scrolling toggle
+        const horizontalRow = new Adw.ActionRow({
+            title: 'Enable Horizontal Scrolling',
+            subtitle: 'When enabled, allows horizontal scrolling to change volume',
+        });
+
+        const horizontalToggle = new Gtk.Switch({
+            active: settings.get_boolean('horizontal-scrolling'),
+            valign: Gtk.Align.CENTER,
+        });
+
+        // Bind the toggle to the settings
+        settings.bind(
+            'horizontal-scrolling',
+            horizontalToggle,
+            'active',
+            Gio.SettingsBindFlags.DEFAULT
+        );
+
+        // Add toggle to the row
+        horizontalRow.add_suffix(horizontalToggle);
+        horizontalRow.set_activatable(true);
+        horizontalRow.set_activatable_widget(horizontalToggle);
+        group.add(horizontalRow);
 
         // Add the page to the window
         window.add(page);

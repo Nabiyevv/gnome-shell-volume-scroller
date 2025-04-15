@@ -12,5 +12,10 @@
       <summary>Inverse scroll direction</summary>
       <description>When enabled, scroll up decreases volume and scroll down increases volume</description>
     </key>
+    <key name="horizontal-scrolling" type="b">
+      <default>false</default>
+      <summary>Enable horizontal scrolling</summary>
+      <description>When enabled, allows horizontal scrolling to change volume</description>
+    </key>
   </schema>
 </schemalist>

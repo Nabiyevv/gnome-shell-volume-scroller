@@ -2,7 +2,6 @@ import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as Volume from 'resource:///org/gnome/shell/ui/status/volume.js';
-import {ExtensionType} from 'resource:///org/gnome/shell/misc/extensionUtils.js';
 
 const VolumeScrollerIcons = [
     'audio-volume-muted-symbolic',
@@ -24,6 +23,7 @@ export default class VolumeScroller {
        this.settings = this._get_settings();
        this.volume_step = this.settings.get_double('volume-step') * this.volume_max;
        this.inverse_scrolling = this.settings.get_boolean('inverse-scrolling');
+       this.horizontal_scrolling = this.settings.get_boolean('horizontal-scrolling');
        
        this.scroll_binding = null;
        this.sink_binding = null;
@@ -72,6 +72,10 @@ export default class VolumeScroller {
         this.middle_click_binding = this.panel.connect(
             'button-press-event',
             (actor, event) => this._handle_middle_click(actor, event));
+
+        this.horizontal_change_binding = this.settings.connect(
+            'changed::horizontal-scrolling',
+            () => this._handle_horizontal_change());
     }
 
     disable() {
@@ -105,39 +109,39 @@ export default class VolumeScroller {
     _handle_direction_change() {
         this.inverse_scrolling = this.settings.get_boolean('inverse-scrolling');
     }
+    
+    _handle_horizontal_change() {
+        this.horizontal_scrolling = this.settings.get_boolean('horizontal-scrolling');
+    }
 
     _handle_scroll(actor, event) {
         let volume = this.sink.volume;
         let direction = event.get_scroll_direction();
-
-        if (this.inverse_scrolling) {
-            switch (direction) {
-                case Clutter.ScrollDirection.UP:
-                    volume -= this.volume_step;
-                    break;
-
-                case Clutter.ScrollDirection.DOWN:
-                    volume += this.volume_step;
-                    break;
-
-                default:
-                    return Clutter.EVENT_PROPAGATE;
+        
+        if(this.inverse_scrolling) {
+            if(this.horizontal_scrolling) {
+                if (direction === Clutter.ScrollDirection.LEFT) volume -= this.volume_step;
+                else if (direction === Clutter.ScrollDirection.RIGHT) volume += this.volume_step;
+                else return Clutter.EVENT_PROPAGATE;
+            }
+            else {
+                if (direction === Clutter.ScrollDirection.UP) volume += this.volume_step;
+                else if (direction === Clutter.ScrollDirection.DOWN) volume -= this.volume_step;
+                else return Clutter.EVENT_PROPAGATE;
             }
         } else {
-            switch (direction) {
-                case Clutter.ScrollDirection.UP:
-                    volume += this.volume_step;
-                    break;
-
-                case Clutter.ScrollDirection.DOWN:
-                    volume -= this.volume_step;
-                    break;
-
-                default:
-                    return Clutter.EVENT_PROPAGATE;
+            if(this.horizontal_scrolling) {
+                if (direction === Clutter.ScrollDirection.LEFT) volume += this.volume_step;
+                else if (direction === Clutter.ScrollDirection.RIGHT) volume -= this.volume_step;
+                    else return Clutter.EVENT_PROPAGATE;
+            }
+            else {
+                if (direction === Clutter.ScrollDirection.UP) volume -= this.volume_step;
+                else if (direction === Clutter.ScrollDirection.DOWN) volume += this.volume_step;
+                    else return Clutter.EVENT_PROPAGATE;
             }
         }
-
+    
         volume = Math.min(volume, this.volume_max);
         volume = Math.max(volume, 0);
 
@@ -178,7 +182,7 @@ export default class VolumeScroller {
         if (volume === 0) {
             n = 0;
         } else {
-            n = parseInt(3 * percentage + 1);
+            n = Math.floor(3 * percentage + 1);
             n = Math.max(1, n);
             n = Math.min(3, n);
         }
