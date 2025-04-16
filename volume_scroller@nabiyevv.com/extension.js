@@ -3,6 +3,8 @@ import Gio from "gi://Gio";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import * as Volume from "resource:///org/gnome/shell/ui/status/volume.js";
 
+import {VolumeBooster} from "./volumeBooster.js";
+
 const VolumeScrollerIcons = [
     "audio-volume-muted-symbolic",
     "audio-volume-low-symbolic",
@@ -17,6 +19,8 @@ export default class VolumeScroller {
 
         this.enabled = false;
         this.sink = null;
+        
+        this.volumeBooster = null;
 
         this.volume_max = this.controller.get_vol_max_norm();
 
@@ -88,6 +92,9 @@ export default class VolumeScroller {
             "changed::horizontal-scrolling",
             () => this._handle_horizontal_change(),
         );
+        
+        this.volumeBooster = new VolumeBooster();
+        this.volumeBooster.enable();
     }
 
     disable() {
@@ -112,6 +119,9 @@ export default class VolumeScroller {
             this.panel.disconnect(this.middle_click_binding);
             this.middle_click_binding = null;
         }
+        
+        
+        this.volumeBooster.disable();
     }
 
     _handle_settings_change() {
@@ -195,6 +205,7 @@ export default class VolumeScroller {
     }
 
     _show_volume(volume) {
+        // log("VolumeScroller showing volume " + volume);
         const percentage = volume / this.volume_max;
         let n;
 
@@ -215,10 +226,14 @@ export default class VolumeScroller {
 }
 
 let volumeScroller = null;
+// let volumeBooster = null;
 
 export function enable() {
     volumeScroller = new VolumeScroller();
     volumeScroller.enable();
+
+    // volumeBooster = new VolumeBooster(); 
+    // volumeBooster.enable();
 }
 
 export function disable() {
@@ -226,4 +241,9 @@ export function disable() {
         volumeScroller.disable();
         volumeScroller = null;
     }
+    
+    // if (volumeBooster !== null) {
+    //     volumeBooster.disable();
+    //     volumeBooster = null;
+    // }
 }
